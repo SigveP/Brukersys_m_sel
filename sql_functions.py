@@ -26,12 +26,37 @@ def check_password(name: str, password: str) -> bool:
         cur.execute("SELECT * FROM Users WHERE username='{0}'".format(name))
         user = cur.fetchone()
 
+        if not user[3]:  # enabled=False
+            return False
+
         cur.execute("SELECT ukey FROM UKeys WHERE userID={0}".format(user[0]))
         key = cur.fetchone()[0]
     except:
         return False
 
     return password == crypto.decrypt(user[2], key)
+
+
+def enable_account(name: str) -> bool:
+    # beskyttelse
+    # ...
+
+    # spør om passord (administrator)
+
+    cur.execute(
+        "UPDATE Users SET enabled=TRUE WHERE username='{0}'".format(name))
+    return True
+
+
+def disable_account(name: str) -> bool:
+    # beskyttelse
+    # ...
+
+    # spør om passord (administrator)
+
+    cur.execute(
+        "UPDATE Users SET enabled=FALSE WHERE username='{0}'".format(name))
+    return True
 
 
 def add_user(name: str, password: str) -> bool:
