@@ -126,9 +126,8 @@ class LoginWindow(QtW.QWidget):
         super().__init__()
 
         try:
-            print('getpassword: {0}'.format(kwargs['getpassword']))
+            assert kwargs['getpassword']
         except:
-            print('getpassword: False')
             kwargs['getpassword'] = False
 
         self.kwargs = kwargs  # for funksjonene

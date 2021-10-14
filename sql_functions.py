@@ -26,7 +26,6 @@ def check_password(name: str, password: str) -> bool:
     ]
 
     if False in tests_list:
-        print(tests_list)
         return PermissionError
 
     try:
@@ -51,7 +50,6 @@ def enable_account(name: str) -> bool:
     ]
 
     if False in tests_list:
-        print(tests_list)
         return PermissionError
 
     # spør om passord (administrator)
@@ -68,7 +66,6 @@ def disable_account(name: str) -> bool:
     ]
 
     if False in tests_list:
-        print(tests_list)
         return PermissionError
 
     # spør om passord (administrator)
@@ -91,7 +88,6 @@ def add_user(name: str, password: str) -> bool:
     ]
 
     if False in tests_list:
-        print(tests_list)
         return PermissionError
 
     # kryptering
