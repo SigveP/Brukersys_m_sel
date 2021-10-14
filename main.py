@@ -105,12 +105,18 @@ class CreateUserWindow(QtW.QWidget):
 
     def createuser(self, username, password, rpassword):
         if password != rpassword:
+            errors.showMessage("Password do not match")
             return
         try:
             sqlf.add_user(username, password)
             self.destroy()
+        except ValueError:  # hvis feil på testene
+            errors.showMessage(
+                "Username or password doesn't meet the requirements")
         except:
-            return
+            errors.showMessage(
+                "There was an error while trying to make the account {}".format(username))
+        return
 
 
 class LoginWindow(QtW.QWidget):
@@ -171,14 +177,19 @@ class LoginWindow(QtW.QWidget):
     def login(self, username: str, password: str):
         if self.kwargs['getpassword']:
             username = self.kwargs['username']
-        if sqlf.check_password(username, password):
-            if self.kwargs['getpassword']:
-                self.hide()
-                return True
+        try:
+            if sqlf.check_password(username, password):
+                if self.kwargs['getpassword']:
+                    self.hide()
+                    return True
 
-            else:
-                self.hide()
-                windows['main'] = MainWindow(username)
+                else:
+                    self.hide()
+                    windows['main'] = MainWindow(username)
+        except PermissionError:
+            errors.showMessage("Account is disabled")
+        except:
+            errors.showMessage("Wrong username or/and password!")
 
     def createuser(self):
         windows['cuser'] = CreateUserWindow()
@@ -196,6 +207,8 @@ def exit_program():
 
 if __name__ == "__main__":
     app = QtW.QApplication(argv)
+    errors = QtW.QErrorMessage()
+    sqlf.seterrormessenger(errors)
     windows = {'login': LoginWindow()}
     windows['login'].show()
     app.exec()

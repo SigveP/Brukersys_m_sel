@@ -1,3 +1,5 @@
+from configparser import Error
+from datetime import datetime
 import mysql.connector
 from mysql.connector import errorcode
 import crypto
@@ -18,26 +20,7 @@ def close() -> None:
     sql.close()
 
 
-def check_password(name: str, password: str) -> bool:
-    # beskyttelse
-    # ...
-
-    try:
-        cur.execute("SELECT * FROM Users WHERE username='{0}'".format(name))
-        user = cur.fetchone()
-
-        if not user[3]:  # enabled=False
-            return False
-
-        cur.execute("SELECT ukey FROM UKeys WHERE userID={0}".format(user[0]))
-        key = cur.fetchone()[0]
-    except:
-        return False
-
-    return password == crypto.decrypt(user[2], key)
-
-
-def enable_account(name: str) -> bool:
+def enable_account(name: str, accesstime: datetime) -> bool:
     # beskyttelse
     # ...
 
@@ -57,6 +40,25 @@ def disable_account(name: str) -> bool:
     cur.execute(
         "UPDATE Users SET enabled=FALSE WHERE username='{0}'".format(name))
     return True
+
+
+def check_password(name: str, password: str) -> bool:
+    # beskyttelse
+    # ...
+
+    try:
+        cur.execute("SELECT * FROM Users WHERE username='{0}'".format(name))
+        user = cur.fetchone()
+
+        if not user[3]:  # enabled=False
+            return PermissionError
+
+        cur.execute("SELECT ukey FROM UKeys WHERE userID={0}".format(user[0]))
+        key = cur.fetchone()[0]
+    except:
+        return Error
+
+    return password == crypto.decrypt(user[2], key)
 
 
 def add_user(name: str, password: str) -> bool:
