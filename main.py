@@ -1,18 +1,20 @@
 # python 3.9.6 64-bit
 
 import sql_functions as sqlf
+import tests
 import PyQt6.QtWidgets as QtW
 import PyQt6.QtGui as QtG
 from sys import argv
-from datetime import datetime
+from time import time
 
 
 class MainWindow(QtW.QWidget):
-    def __init__(self, user):
+    def __init__(self, username):
         super().__init__()
 
-        self.user = user  # brukernavn
-        self.last_check = datetime.now()  # hvis under 3 min: ikke spør om passord
+        self.isadmin = sqlf.isAdministrator(username)
+        self.username = username  # brukernavn
+        self.last_check = time()  # hvis under 3 min: ikke spør om passord
         self.images = {
             'seal': (  # bilde, beskrivelse
                 QtG.QPixmap('images/sel.jpg').scaledToWidth(200),
@@ -31,29 +33,44 @@ class MainWindow(QtW.QWidget):
         buttonlayout = QtW.QHBoxLayout()
         logout_button = QtW.QPushButton(text="Logout")
         logout_button.clicked.connect(self.logout)
+        changepass_button = QtW.QPushButton(text="Change Password")
+        changepass_button.clicked.connect(self.change_password)
         buttonlayout.addWidget(logout_button)
+        buttonlayout.addWidget(changepass_button)
+
+        if self.isadmin:
+            adminbuttonlayout = QtW.QHBoxLayout()
+            changeupass_button = QtW.QPushButton(text="Create TempPass")
+            changeupass_button.clicked.connect(self.create_temporary_password)
+            adminbuttonlayout.addWidget(changeupass_button)
 
         windowlayout = QtW.QVBoxLayout()
         windowlayout.addLayout(contentlayout)
         windowlayout.addLayout(buttonlayout)
+        if self.isadmin:
+            windowlayout.addLayout(adminbuttonlayout)
 
         self.setLayout(windowlayout)
         self.show()
 
     def check(self):
-        time = datetime.now()
+        t = time()
 
-        if (time - self.last_check).min < 3:
+        if ((t - self.last_check) / 60) < 1:
             return True
         else:
-            access = self.getpassword()
-            if access:
-                self.last_check = time
-            return access
+            windows['passwordcheck'] = LoginWindow(
+                getpassword=True, username=self.username)
+            windows['passwordcheck'].show()
 
-    def getpassword(self):
-        windows['passwordcheck'] = LoginWindow(
-            getpassword=True, user=self.user)
+    def create_temporary_password(self):
+        if self.check():
+            sqlf.create_temporary_password('tbrukere')
+
+    def change_password(self):
+        if self.check():
+            windows['changepw'] = CreateUserWindow(
+                changepassword=True, username=self.username)
 
     def logout(self):
         self.destroy()
@@ -64,17 +81,25 @@ class MainWindow(QtW.QWidget):
 
 
 class CreateUserWindow(QtW.QWidget):
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__()
 
-        namelayout = QtW.QHBoxLayout()
-        name_label = QtW.QLabel(text="Username: ")
-        name_field = QtW.QLineEdit()
-        namelayout.addWidget(name_label)
-        namelayout.addWidget(name_field)
+        try:
+            assert kwargs['changepassword']
+        except:
+            kwargs['changepassword'] = False
+
+        if not kwargs['changepassword']:
+            namelayout = QtW.QHBoxLayout()
+            name_label = QtW.QLabel(text="Username: ")
+            name_field = QtW.QLineEdit()
+            namelayout.addWidget(name_label)
+            namelayout.addWidget(name_field)
 
         passwordlayout = QtW.QHBoxLayout()
         password_label = QtW.QLabel(text=" Password: ")
+        if kwargs['changepassword']:
+            password_label.setText("New Password: ")
         password_field = QtW.QLineEdit()
         password_field.setEchoMode(QtW.QLineEdit.EchoMode.Password)
         passwordlayout.addWidget(password_label)
@@ -82,25 +107,41 @@ class CreateUserWindow(QtW.QWidget):
 
         rpasswordlayout = QtW.QHBoxLayout()
         rpassword_label = QtW.QLabel(text=" Password: ")
+        if kwargs['changepassword']:
+            rpassword_label.setText("New Password: ")
         rpassword_field = QtW.QLineEdit()
         rpassword_field.setEchoMode(QtW.QLineEdit.EchoMode.Password)
         rpasswordlayout.addWidget(rpassword_label)
         rpasswordlayout.addWidget(rpassword_field)
 
-        create_button = QtW.QPushButton(text="Create Account")
-        create_button.clicked.connect(lambda: self.createuser(
-            name_field.text(),
-            password_field.text(),
-            rpassword_field.text()
-        ))
+        if kwargs['changepassword']:
+            change_button = QtW.QPushButton(text="Change Password")
+            change_button.clicked.connect(lambda: self.createuser(
+                kwargs['username'],
+                password_field.text(),
+                rpassword_field.text()
+            ))
+        else:
+            create_button = QtW.QPushButton(text="Create Account")
+            create_button.clicked.connect(lambda: self.createuser(
+                name_field.text(),
+                password_field.text(),
+                rpassword_field.text()
+            ))
 
         windowlayout = QtW.QVBoxLayout()
-        windowlayout.addLayout(namelayout)
-        windowlayout.addLayout(passwordlayout)
-        windowlayout.addLayout(rpasswordlayout)
-        windowlayout.addWidget(create_button)
+        if kwargs['changepassword']:
+            windowlayout.addLayout(passwordlayout)
+            windowlayout.addLayout(rpasswordlayout)
+            windowlayout.addWidget(change_button)
+        else:
+            windowlayout.addLayout(namelayout)
+            windowlayout.addLayout(passwordlayout)
+            windowlayout.addLayout(rpasswordlayout)
+            windowlayout.addWidget(create_button)
 
         self.setLayout(windowlayout)
+        self.kwargs = kwargs
         self.show()
 
     def createuser(self, username, password, rpassword):
@@ -108,7 +149,10 @@ class CreateUserWindow(QtW.QWidget):
             errors.showMessage("Password do not match")
             return
 
-        added = sqlf.add_user(username, password)
+        if self.kwargs['changepassword']:
+            added = sqlf.change_password(username, password)
+        else:
+            added = sqlf.add_user(username, password)
 
         if added == True:
             self.destroy()
@@ -151,6 +195,8 @@ class LoginWindow(QtW.QWidget):
 
         if kwargs['getpassword']:
             confirm_button = QtW.QPushButton(text="Confirm")
+            confirm_button.clicked.connect(lambda: self.login(
+                kwargs['username'], password_field.text()))
 
         else:
             buttonlayout = QtW.QHBoxLayout()
@@ -181,8 +227,8 @@ class LoginWindow(QtW.QWidget):
         try:
             assert sqlf.check_password(username, password) == True
             if self.kwargs['getpassword']:
-                self.hide()
-                return True
+                windows['main'].last_check = time()
+                self.destroy()
 
             else:
                 self.hide()
