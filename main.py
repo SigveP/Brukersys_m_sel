@@ -186,7 +186,7 @@ class LoginWindow(QtW.QWidget):
                 else:
                     self.hide()
                     windows['main'] = MainWindow(username)
-        except PermissionError:
+        except PermissionError.args[0] == 1:
             errors.showMessage("Account is disabled")
         except:
             errors.showMessage("Wrong username or/and password!")
