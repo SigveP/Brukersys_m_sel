@@ -105,12 +105,20 @@ class CreateUserWindow(QtW.QWidget):
 
     def createuser(self, username, password, rpassword):
         if password != rpassword:
+            errors.showMessage("Password do not match")
             return
-        try:
-            sqlf.add_user(username, password)
+
+        added = sqlf.add_user(username, password)
+
+        if added == True:
             self.destroy()
-        except:
-            return
+        elif added == PermissionError:  # hvis feil på testene
+            errors.showMessage(
+                "Username or password doesn't meet the requirements")
+        else:
+            errors.showMessage(
+                "There was an error while trying to make the account {}".format(username))
+        return
 
 
 class LoginWindow(QtW.QWidget):
@@ -118,9 +126,8 @@ class LoginWindow(QtW.QWidget):
         super().__init__()
 
         try:
-            print('getpassword: {0}'.format(kwargs['getpassword']))
+            assert kwargs['getpassword']
         except:
-            print('getpassword: False')
             kwargs['getpassword'] = False
 
         self.kwargs = kwargs  # for funksjonene
@@ -171,7 +178,8 @@ class LoginWindow(QtW.QWidget):
     def login(self, username: str, password: str):
         if self.kwargs['getpassword']:
             username = self.kwargs['username']
-        if sqlf.check_password(username, password):
+        try:
+            assert sqlf.check_password(username, password) == True
             if self.kwargs['getpassword']:
                 self.hide()
                 return True
@@ -179,6 +187,10 @@ class LoginWindow(QtW.QWidget):
             else:
                 self.hide()
                 windows['main'] = MainWindow(username)
+        except PermissionError:
+            errors.showMessage("Account is disabled")
+        except:
+            errors.showMessage("Wrong username or/and password!")
 
     def createuser(self):
         windows['cuser'] = CreateUserWindow()
@@ -196,6 +208,7 @@ def exit_program():
 
 if __name__ == "__main__":
     app = QtW.QApplication(argv)
+    errors = QtW.QErrorMessage()
     windows = {'login': LoginWindow()}
     windows['login'].show()
     app.exec()
