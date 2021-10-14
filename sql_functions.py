@@ -1,5 +1,3 @@
-from configparser import Error
-from datetime import datetime
 import mysql.connector
 from mysql.connector import errorcode
 import tests
@@ -36,12 +34,12 @@ def check_password(name: str, password: str) -> bool:
         user = cur.fetchone()
 
         if not user[3]:  # enabled=False
-            return PermissionError(1)
+            return PermissionError
 
         cur.execute("SELECT ukey FROM UKeys WHERE userID={0}".format(user[0]))
         key = cur.fetchone()[0]
     except:
-        return Error
+        return ValueError
 
     return password == crypto.decrypt(user[2], key)
 
