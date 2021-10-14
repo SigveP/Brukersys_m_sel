@@ -3,7 +3,13 @@ def between(string: str, min: int, max: int) -> bool:
 
 
 def notSQL(string: str) -> bool:
-    sqlcmds = ['DROP', 'CREATE', 'INSERT', 'DESCRIBE', 'SELECT', 'ALTER']
+    sqlcmds = [  # hentet fra https://www.javatpoint.com/dbms-sql-command
+        'CREATE', 'DROP', 'ALTER', 'TRUNCATE',
+        'INSERT', 'UPDATE', 'DELETE',
+        'GRANT', 'REVOKE',
+        'COMMIT', 'ROLLBACK', 'SAVE POINT',
+        'SELECT'
+    ]
 
     try:
         string = string.split(' ')[0]
