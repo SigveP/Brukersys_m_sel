@@ -1,8 +1,6 @@
 # python 3.9.6 64-bit
 
-from logging import disable
 import sql_functions as sqlf
-import tests
 import PyQt6.QtWidgets as QtW
 import PyQt6.QtGui as QtG
 from sys import argv
