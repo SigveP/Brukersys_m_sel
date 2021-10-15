@@ -20,6 +20,18 @@ def close() -> None:
     sql.close()
 
 
+def log(name: str, what: str) -> None:
+    id = get_id(name)
+    cur.execute("INSERT INTO Log (userID, what, timedone) VALUES (%s, %s, %s)",
+                (id, what, datetime.now()))
+    sql.commit()
+
+
+def get_id(name: str) -> None:
+    cur.execute("SELECT id FROM Users WHERE username='{0}'".format(name))
+    return cur.fetchone()[0]
+
+
 def enable_account(name: str) -> bool:
     # beskyttelse
     tests_list = [
@@ -32,6 +44,7 @@ def enable_account(name: str) -> bool:
     cur.execute(
         "UPDATE Users SET enabled=TRUE WHERE username='{0}'".format(name))
     sql.commit()
+    log(name, "enabled")
     return True
 
 
@@ -47,12 +60,12 @@ def disable_account(name: str) -> bool:
     cur.execute(
         "UPDATE Users SET enabled=FALSE WHERE username='{0}'".format(name))
     sql.commit()
+    log(name, "disabled")
     return True
 
 
 def isAdministrator(name: str) -> bool:
-    cur.execute("SELECT id FROM Users WHERE username='{0}'".format(name))
-    id = cur.fetchone()[0]
+    id = get_id(name)
 
     cur.execute(
         "SELECT * FROM Administrators WHERE userID={0}".format(id))
@@ -75,8 +88,7 @@ def create_temporary_password(name: str) -> str:
         temppass.append(ranchoice(chars))
     temppass = "".join(temppass)
 
-    cur.execute("SELECT id FROM Users WHERE username='{0}'".format(name))
-    id = cur.fetchone()[0]
+    id = get_id(name)
 
     try:
         time = datetime.now() + timedelta(days=7)
@@ -94,6 +106,7 @@ def create_temporary_password(name: str) -> str:
     except:
         return "Error"  # fiks
 
+    log(name, "temporary_password")
     return temppass
 
 
@@ -138,6 +151,7 @@ def change_password(name: str, new_password: str) -> bool:
     delete_temporary_passwords(id)
 
     sql.commit()
+    log(name, "changed_password")
     return True
 
 
@@ -195,10 +209,10 @@ def add_user(name: str, password: str) -> bool:
                 (name, encrypted_password, True))
     sql.commit()
 
-    cur.execute("SELECT id FROM Users WHERE username='{0}'".format(name))
-    id = cur.fetchone()[0]
+    id = get_id(name)
 
     cur.execute(
         "INSERT INTO UKeys (userID, ukey) VALUES (%s, %s)", (id, key))
     sql.commit()
+    log(name, "create_user")
     return True

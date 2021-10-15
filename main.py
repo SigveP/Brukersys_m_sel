@@ -89,6 +89,7 @@ class MainWindow(QtW.QWidget):
 
     def logout(self):
         self.destroy()
+        sqlf.log(self.username, "logout")
         windows['login'].show()
 
     def closeEvent(self, a0: QtG.QCloseEvent) -> None:
@@ -302,6 +303,7 @@ class LoginWindow(QtW.QWidget):
 
             else:
                 self.hide()
+                sqlf.log(username, "login")
                 windows['main'] = MainWindow(username)
         except PermissionError:
             errors.showMessage("Account is disabled")
