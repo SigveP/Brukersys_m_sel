@@ -65,7 +65,11 @@ class MainWindow(QtW.QWidget):
 
     def create_temporary_password(self):
         if self.check():
-            sqlf.create_temporary_password('tbrukere')
+            try:
+                windows['temppass'].show()
+            except:
+                windows['temppass'] = CreateTempPasswordWindow()
+                windows['temppass'].show()
 
     def change_password(self):
         if self.check():
@@ -78,6 +82,27 @@ class MainWindow(QtW.QWidget):
 
     def closeEvent(self, a0: QtG.QCloseEvent) -> None:
         exit_program()
+
+
+class CreateTempPasswordWindow(QtW.QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.user_field = QtW.QLineEdit()
+        self.pass_label = QtW.QLineEdit()  # QLineEdit() så man kan kopiere
+        create_button = QtW.QPushButton(text="Create")
+        create_button.clicked.connect(self.createtemppass)
+
+        layout = QtW.QVBoxLayout()
+        layout.addWidget(self.user_field)
+        layout.addWidget(self.pass_label)
+        layout.addWidget(create_button)
+
+        self.setLayout(layout)
+
+    def createtemppass(self):
+        temppass = sqlf.create_temporary_password(self.user_field.text())
+        self.pass_label.setText(temppass)
 
 
 class CreateUserWindow(QtW.QWidget):

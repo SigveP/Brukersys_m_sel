@@ -5,7 +5,7 @@ import tests
 import crypto
 
 if __name__ == "sql_functions":
-    sql = mysql.connector.connect(
+    sql = mysql.connector.connect(  # med rettighene 'INSERT', 'UPDATE', 'DELETE', 'SELECT'
         host='localhost',
         port='3306',
         user='pythonC',
@@ -34,7 +34,7 @@ def isAdministrator(name: str) -> bool:
         return False
 
 
-def create_temporary_password(name: str) -> None:
+def create_temporary_password(name: str) -> str:
     from random import choice as ranchoice
 
     chars = "1£2£3£4£5£6£7£8£9£0£q£w£e£r£t£y£u£i£o£p£a£s£d£f£g£h£j£k£l£z£x£c£v£b£n£m£Q£W£E£R£T£Y£U£I£O£P£A£S£D£F£G£H£J£K£L£Z£X£C£V£B£N£M£-£_£,£.£;£:£<£>£#£&£!£?".split(
@@ -43,14 +43,27 @@ def create_temporary_password(name: str) -> None:
     temppass = []
     for i in range(20):
         temppass.append(ranchoice(chars))
+    temppass = "".join(temppass)
 
     cur.execute("SELECT id FROM Users WHERE username='{0}'".format(name))
     id = cur.fetchone()[0]
 
-    cur.execute(
-        "INSERT INTO TempPasswords (userID, passwd, expires) VALUES (%s, %s, %s)", (id, "".join(temppass), datetime.now()))
-    sql.commit()
-    return True
+    try:
+        cur.execute(
+            "INSERT INTO TempPasswords (userID, passwd, expires) VALUES (%s, %s, %s)", (id, temppass, datetime.now()))
+        sql.commit()
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_DUP_ENTRY:
+            cur.execute(
+                "SELECT passwd FROM TempPasswords WHERE userID={0}".format(id))
+            return cur.fetchone()[0]
+        else:
+            print(err)
+            return "Error"  # fiks
+    except:
+        return "Error"  # fiks
+
+    return temppass
 
 
 def delete_temporary_passwords(id: str) -> bool:
@@ -72,7 +85,6 @@ def change_password(name: str, new_password: str) -> bool:
 
     # kryptering
     encrypted_password, key = crypto.encrypt(new_password)
-    print(len(key))
     # id
     cur.execute("SELECT id FROM Users WHERE username='{0}'".format(name))
     id = cur.fetchone()[0]
@@ -84,6 +96,9 @@ def change_password(name: str, new_password: str) -> bool:
     # oppdatere passord
     cur.execute("UPDATE Users SET passwd=CONVERT(\"{1}\", CHAR) WHERE username='{0}'".format(
         name, encrypted_password.decode()))
+
+    # sletter midletidlige passord
+    delete_temporary_passwords(id)
 
     sql.commit()
     return True
@@ -116,7 +131,7 @@ def check_password(name: str, password: str) -> bool:
             temppass = False  # passord kan ikke være False
     except:
         return ValueError
-    print(crypto.decrypt(user[2], key))
+
     return password == crypto.decrypt(user[2], key) or password == temppass
 
 
