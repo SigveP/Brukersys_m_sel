@@ -20,6 +20,36 @@ def close() -> None:
     sql.close()
 
 
+def enable_account(name: str) -> bool:
+    # beskyttelse
+    tests_list = [
+        tests.using_legalcharacters(name, 'username')
+    ]
+
+    if False in tests_list:
+        return PermissionError
+
+    cur.execute(
+        "UPDATE Users SET enabled=TRUE WHERE username='{0}'".format(name))
+    sql.commit()
+    return True
+
+
+def disable_account(name: str) -> bool:
+    # beskyttelse
+    tests_list = [
+        tests.using_legalcharacters(name, 'username')
+    ]
+
+    if False in tests_list:
+        return PermissionError
+
+    cur.execute(
+        "UPDATE Users SET enabled=FALSE WHERE username='{0}'".format(name))
+    sql.commit()
+    return True
+
+
 def isAdministrator(name: str) -> bool:
     cur.execute("SELECT id FROM Users WHERE username='{0}'".format(name))
     id = cur.fetchone()[0]

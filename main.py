@@ -1,5 +1,6 @@
 # python 3.9.6 64-bit
 
+from logging import disable
 import sql_functions as sqlf
 import tests
 import PyQt6.QtWidgets as QtW
@@ -39,9 +40,12 @@ class MainWindow(QtW.QWidget):
         buttonlayout.addWidget(changepass_button)
 
         if self.isadmin:
-            adminbuttonlayout = QtW.QHBoxLayout()
-            changeupass_button = QtW.QPushButton(text="Create TempPass")
+            adminbuttonlayout = QtW.QVBoxLayout()
+            disenable_button = QtW.QPushButton("Dis/Enable Accounts")
+            disenable_button.clicked.connect(self.disenable_accounts)
+            changeupass_button = QtW.QPushButton(text="Temporary Passwords")
             changeupass_button.clicked.connect(self.create_temporary_password)
+            adminbuttonlayout.addWidget(disenable_button)
             adminbuttonlayout.addWidget(changeupass_button)
 
         windowlayout = QtW.QVBoxLayout()
@@ -68,8 +72,17 @@ class MainWindow(QtW.QWidget):
             try:
                 windows['temppass'].show()
             except:
-                windows['temppass'] = CreateTempPasswordWindow()
+                windows['temppass'] = CreateAdministrationWindow(temppass=True)
                 windows['temppass'].show()
+
+    def disenable_accounts(self):
+        if self.check():
+            try:
+                windows['disenable'].show()
+            except:
+                windows['disenable'] = CreateAdministrationWindow(
+                    disenable=True)
+                windows['disenable'].show()
 
     def change_password(self):
         if self.check():
@@ -84,25 +97,59 @@ class MainWindow(QtW.QWidget):
         exit_program()
 
 
-class CreateTempPasswordWindow(QtW.QWidget):
-    def __init__(self):
+class CreateAdministrationWindow(QtW.QWidget):
+    def __init__(self, **kwargs):
         super().__init__()
 
         self.user_field = QtW.QLineEdit()
-        self.pass_label = QtW.QLineEdit()  # QLineEdit() så man kan kopiere
-        create_button = QtW.QPushButton(text="Create")
-        create_button.clicked.connect(self.createtemppass)
+
+        try:
+            assert kwargs['temppass']
+        except:
+            kwargs['temppass'] = False
+
+        try:
+            assert kwargs['disenable']
+        except:
+            kwargs['disenable'] = False
+
+        if kwargs['temppass']:
+            self.pass_label = QtW.QLineEdit()  # QLineEdit() så man kan kopiere
+            create_button = QtW.QPushButton(text="Create")
+            create_button.clicked.connect(self.createtemppass)
+        elif kwargs['disenable']:
+            enable_button = QtW.QPushButton(text="Enable")
+            enable_button.clicked.connect(self.enableaccount)
+            disable_button = QtW.QPushButton(text="Disable")
+            disable_button.clicked.connect(self.disableaccount)
 
         layout = QtW.QVBoxLayout()
         layout.addWidget(self.user_field)
-        layout.addWidget(self.pass_label)
-        layout.addWidget(create_button)
+        if kwargs['temppass']:
+            layout.addWidget(self.pass_label)
+            layout.addWidget(create_button)
+        elif kwargs['disenable']:
+            layout.addWidget(enable_button)
+            layout.addWidget(disable_button)
 
         self.setLayout(layout)
 
     def createtemppass(self):
         temppass = sqlf.create_temporary_password(self.user_field.text())
         self.pass_label.setText(temppass)
+
+    def enableaccount(self):
+        enabled = sqlf.enable_account(self.user_field.text())
+        if enabled == PermissionError:
+            errors.showMessage(
+                "There was an error while trying to enable {0}".format(self.user_field.text()))
+
+    def disableaccount(self):
+        try:
+            sqlf.disable_account(self.user_field.text())
+        except:
+            errors.showMessage(
+                "There was an error while trying to disable {0}".format(self.user_field.text()))
 
 
 class CreateUserWindow(QtW.QWidget):
