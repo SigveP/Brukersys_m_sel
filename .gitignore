@@ -3,3 +3,4 @@ __pycache__/
 requirements.txt
 mysql_scripts/
 images/
+.vscode/
