@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import mysql.connector
 from mysql.connector import errorcode
 import tests
@@ -79,8 +79,9 @@ def create_temporary_password(name: str) -> str:
     id = cur.fetchone()[0]
 
     try:
+        time = datetime.now() + timedelta(days=7)
         cur.execute(
-            "INSERT INTO TempPasswords (userID, passwd, expires) VALUES (%s, %s, %s)", (id, temppass, datetime.now()))
+            "INSERT INTO TempPasswords (userID, passwd, expires) VALUES (%s, %s, %s)", (id, temppass, time))
         sql.commit()
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_DUP_ENTRY:
@@ -96,9 +97,15 @@ def create_temporary_password(name: str) -> str:
     return temppass
 
 
-def delete_temporary_passwords(id: str) -> bool:
+def delete_temporary_passwords(id: str) -> None:
     cur.execute(
         "DELETE FROM TempPasswords WHERE userID={0}".format(id))
+    sql.commit()
+
+
+def delete_expired_temporary_passwords() -> None:
+    cur.execute(
+        "DELETE FROM TempPasswords WHERE expires<'{0}'".format(datetime.now()))
     sql.commit()
 
 

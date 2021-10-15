@@ -48,14 +48,14 @@ class testAdmin(unittest.TestCase):
 
     def test_isAdmin(self):
         self.assertTrue(sqlf.isAdministrator('Bruker1'))
-        self.assertFalse(sqlf.isAdministrator('testbruker'))
+        self.assertFalse(sqlf.isAdministrator('lavh'))
 
 
 class testSQL(unittest.TestCase):
 
     def test_checkpass(self):
 
-        self.assertTrue(sqlf.check_password('Bruker1', '123'))
+        self.assertTrue(sqlf.check_password('Bruker1', 'Pass1.'))
 
         self.assertFalse(sqlf.check_password('Bruker1', '123efwef.'))
 

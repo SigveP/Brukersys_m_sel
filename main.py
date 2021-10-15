@@ -327,6 +327,7 @@ def exit_program():
 if __name__ == "__main__":
     app = QtW.QApplication(argv)
     errors = QtW.QErrorMessage()
+    sqlf.delete_expired_temporary_passwords()
     windows = {'login': LoginWindow()}
     windows['login'].show()
     app.exec()
