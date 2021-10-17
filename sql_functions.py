@@ -20,10 +20,13 @@ def close() -> None:
     sql.close()
 
 
-def log(name: str, what: str) -> None:
-    id = get_id(name)
-    cur.execute("INSERT INTO Log (userID, what, timedone) VALUES (%s, %s, %s)",
-                (id, what, datetime.now()))
+def log(id: str, what: str, other: str = None) -> None:
+    try:
+        other = get_id(other)
+    except:
+        other = None
+    cur.execute("INSERT INTO Log (userID, what, otherID, timedone) VALUES (%s, %s, %s, %s)",
+                (id, what, other, datetime.now()))
     sql.commit()
 
 
@@ -32,7 +35,7 @@ def get_id(name: str) -> None:
     return cur.fetchone()[0]
 
 
-def enable_account(name: str) -> bool:
+def enable_account(name: str, id: str) -> bool:
     # beskyttelse
     tests_list = [
         tests.using_legalcharacters(name, 'username')
@@ -44,11 +47,11 @@ def enable_account(name: str) -> bool:
     cur.execute(
         "UPDATE Users SET enabled=TRUE WHERE username='{0}'".format(name))
     sql.commit()
-    log(name, "enabled")
+    log(id, "enabled", name)
     return True
 
 
-def disable_account(name: str) -> bool:
+def disable_account(name: str, id: str) -> bool:
     # beskyttelse
     tests_list = [
         tests.using_legalcharacters(name, 'username')
@@ -60,13 +63,11 @@ def disable_account(name: str) -> bool:
     cur.execute(
         "UPDATE Users SET enabled=FALSE WHERE username='{0}'".format(name))
     sql.commit()
-    log(name, "disabled")
+    log(id, "disabled", name)
     return True
 
 
-def isAdministrator(name: str) -> bool:
-    id = get_id(name)
-
+def isAdministrator(id: str) -> bool:
     cur.execute(
         "SELECT * FROM Administrators WHERE userID={0}".format(id))
 
@@ -77,7 +78,7 @@ def isAdministrator(name: str) -> bool:
         return False
 
 
-def create_temporary_password(name: str) -> str:
+def create_temporary_password(name: str, adminid: str) -> str:
     from random import choice as ranchoice
 
     chars = "1£2£3£4£5£6£7£8£9£0£q£w£e£r£t£y£u£i£o£p£a£s£d£f£g£h£j£k£l£z£x£c£v£b£n£m£Q£W£E£R£T£Y£U£I£O£P£A£S£D£F£G£H£J£K£L£Z£X£C£V£B£N£M£-£_£,£.£;£:£<£>£#£&£!£?".split(
@@ -106,7 +107,7 @@ def create_temporary_password(name: str) -> str:
     except:
         return "Error"  # fiks
 
-    log(name, "temporary_password")
+    log(adminid, "temporary_password", name)
     return temppass
 
 
@@ -122,7 +123,7 @@ def delete_expired_temporary_passwords() -> None:
     sql.commit()
 
 
-def change_password(name: str, new_password: str) -> bool:
+def change_password(id: str, new_password: str) -> bool:
     # beskyttelse
     test_list = [
         tests.between(new_password, 5, 25),
@@ -135,23 +136,20 @@ def change_password(name: str, new_password: str) -> bool:
 
     # kryptering
     encrypted_password, key = crypto.encrypt(new_password)
-    # id
-    cur.execute("SELECT id FROM Users WHERE username='{0}'".format(name))
-    id = cur.fetchone()[0]
 
     # oppdatere nøkkel
     cur.execute('UPDATE UKeys SET ukey=CONVERT(\"{1}\", CHAR) WHERE userID={0}'.format(
         id, key.decode()))
 
     # oppdatere passord
-    cur.execute("UPDATE Users SET passwd=CONVERT(\"{1}\", CHAR) WHERE username='{0}'".format(
-        name, encrypted_password.decode()))
+    cur.execute("UPDATE Users SET passwd=CONVERT(\"{1}\", CHAR) WHERE id='{0}'".format(
+        id, encrypted_password.decode()))
 
     # sletter midletidlige passord
     delete_temporary_passwords(id)
 
     sql.commit()
-    log(name, "changed_password")
+    log(id, "changed_password")
     return True
 
 
@@ -214,5 +212,5 @@ def add_user(name: str, password: str) -> bool:
     cur.execute(
         "INSERT INTO UKeys (userID, ukey) VALUES (%s, %s)", (id, key))
     sql.commit()
-    log(name, "create_user")
+    log(id, "create_user")
     return True

@@ -8,11 +8,12 @@ from time import time
 
 
 class MainWindow(QtW.QWidget):
-    def __init__(self, username):
+    def __init__(self, username, id):
         super().__init__()
 
-        self.isadmin = sqlf.isAdministrator(username)
-        self.username = username  # brukernavn
+        self.isadmin = sqlf.isAdministrator(id)
+        self.username = username
+        self.id = id
         self.last_check = time()  # hvis under 3 min: ikke spør om passord
         self.images = {
             'seal': (  # bilde, beskrivelse
@@ -70,7 +71,8 @@ class MainWindow(QtW.QWidget):
             try:
                 windows['temppass'].show()
             except:
-                windows['temppass'] = CreateAdministrationWindow(temppass=True)
+                windows['temppass'] = AdministrationWindow(
+                    self.id, temppass=True)
                 windows['temppass'].show()
 
     def disenable_accounts(self):
@@ -78,27 +80,29 @@ class MainWindow(QtW.QWidget):
             try:
                 windows['disenable'].show()
             except:
-                windows['disenable'] = CreateAdministrationWindow(
-                    disenable=True)
+                windows['disenable'] = AdministrationWindow(
+                    self.id, disenable=True)
                 windows['disenable'].show()
 
     def change_password(self):
         if self.check():
             windows['changepw'] = CreateUserWindow(
-                changepassword=True, username=self.username)
+                changepassword=True, id=self.id)
 
     def logout(self):
         self.destroy()
-        sqlf.log(self.username, "logout")
+        sqlf.log(self.id, "logout")
         windows['login'].show()
 
     def closeEvent(self, a0: QtG.QCloseEvent) -> None:
         exit_program()
 
 
-class CreateAdministrationWindow(QtW.QWidget):
-    def __init__(self, **kwargs):
+class AdministrationWindow(QtW.QWidget):
+    def __init__(self, id, **kwargs):
         super().__init__()
+
+        self.id = id
 
         self.user_field = QtW.QLineEdit()
 
@@ -134,18 +138,19 @@ class CreateAdministrationWindow(QtW.QWidget):
         self.setLayout(layout)
 
     def createtemppass(self):
-        temppass = sqlf.create_temporary_password(self.user_field.text())
+        temppass = sqlf.create_temporary_password(
+            self.user_field.text(), self.id)
         self.pass_label.setText(temppass)
 
     def enableaccount(self):
-        enabled = sqlf.enable_account(self.user_field.text())
+        enabled = sqlf.enable_account(self.user_field.text(), self.id)
         if enabled == PermissionError:
             errors.showMessage(
                 "There was an error while trying to enable {0}".format(self.user_field.text()))
 
     def disableaccount(self):
         try:
-            sqlf.disable_account(self.user_field.text())
+            sqlf.disable_account(self.user_field.text(), self.id)
         except:
             errors.showMessage(
                 "There was an error while trying to disable {0}".format(self.user_field.text()))
@@ -188,7 +193,7 @@ class CreateUserWindow(QtW.QWidget):
         if kwargs['changepassword']:
             change_button = QtW.QPushButton(text="Change Password")
             change_button.clicked.connect(lambda: self.createuser(
-                kwargs['username'],
+                kwargs['id'],
                 password_field.text(),
                 rpassword_field.text()
             ))
@@ -232,7 +237,7 @@ class CreateUserWindow(QtW.QWidget):
                 "Username or password doesn't meet the requirements")
         else:
             errors.showMessage(
-                "There was an error while trying to make the account {}".format(username))
+                "There was an error while trying to make the account {0}".format(username))
         return
 
 
@@ -303,8 +308,9 @@ class LoginWindow(QtW.QWidget):
 
             else:
                 self.hide()
-                sqlf.log(username, "login")
-                windows['main'] = MainWindow(username)
+                id = sqlf.get_id(username)
+                sqlf.log(id, "login")
+                windows['main'] = MainWindow(username, id)
         except PermissionError:
             errors.showMessage("Account is disabled")
         except:
