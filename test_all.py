@@ -47,17 +47,17 @@ class testtests(unittest.TestCase):
 class testAdmin(unittest.TestCase):
 
     def test_isAdmin(self):
-        self.assertTrue(sqlf.isAdministrator('Bruker1'))
-        self.assertFalse(sqlf.isAdministrator('lavh'))
+        self.assertTrue(sqlf.isAdministrator(1))
+        self.assertFalse(sqlf.isAdministrator(3))
 
 
 class testSQL(unittest.TestCase):
 
     def test_checkpass(self):
 
-        self.assertTrue(sqlf.check_password('Bruker1', 'Pass1.'))
+        self.assertTrue(sqlf.check_password('admin', 'Pass1.'))
 
-        self.assertFalse(sqlf.check_password('Bruker1', '123efwef.'))
+        self.assertFalse(sqlf.check_password('admin', '123efwef.'))
 
     def test_addUser(self):
 
