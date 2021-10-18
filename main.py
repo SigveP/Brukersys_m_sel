@@ -141,19 +141,27 @@ class AdministrationWindow(QtW.QWidget):
         temppass = sqlf.create_temporary_password(
             self.user_field.text(), self.id)
         self.pass_label.setText(temppass)
+        if temppass != NameError:
+            QtW.QMessageBox.about(
+                self, 'Info', 'Created TempPass for {0}'.format(self.user_field.text()))
 
     def enableaccount(self):
         enabled = sqlf.enable_account(self.user_field.text(), self.id)
         if enabled == PermissionError:
             errors.showMessage(
                 "There was an error while trying to enable {0}".format(self.user_field.text()))
+        else:
+            QtW.QMessageBox.about(
+                self, 'Info', 'Enabled {0}'.format(self.user_field.text()))
 
     def disableaccount(self):
-        try:
-            sqlf.disable_account(self.user_field.text(), self.id)
-        except:
+        enabled = sqlf.disable_account(self.user_field.text(), self.id)
+        if enabled == PermissionError:
             errors.showMessage(
                 "There was an error while trying to disable {0}".format(self.user_field.text()))
+        else:
+            QtW.QMessageBox.about(
+                self, 'Info', 'Disabled {0}'.format(self.user_field.text()))
 
 
 class CreateUserWindow(QtW.QWidget):
@@ -231,6 +239,10 @@ class CreateUserWindow(QtW.QWidget):
             added = sqlf.add_user(username, password)
 
         if added == True:
+            if self.kwargs['changepassword']:
+                QtW.QMessageBox.about(self, 'Info', 'Changed Password')
+            else:
+                QtW.QMessageBox.about(self, 'Info', 'Created Account')
             self.destroy()
         elif added == PermissionError:  # hvis feil på testene
             errors.showMessage(

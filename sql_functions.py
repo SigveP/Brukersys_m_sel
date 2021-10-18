@@ -103,9 +103,9 @@ def create_temporary_password(name: str, adminid: str) -> str:
             return cur.fetchone()[0]
         else:
             print(err)
-            return "Error"  # fiks
+            return NameError
     except:
-        return "Error"  # fiks
+        return NameError
 
     log(adminid, "temporary_password", name)
     return temppass
