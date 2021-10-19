@@ -24,10 +24,10 @@ def notSQL(string: str) -> bool:
 
 def meets_requirements(string: str, numbers: int, bigchars: int,
                        smallchars: int, specialchars: int) -> bool:
-    nums = "1,2,3,4,5,6,7,8,9,0".split(',')
-    bchars = "Q,W,E,R,T,Y,U,I,O,P,A,S,D,F,G,H,J,K,L,Z,X,C,V,B,N,M".split(',')
-    schars = "q,w,e,r,t,y,u,i,o,p,a,s,d,f,g,h,j,k,l,z,x,c,v,b,n,m".split(',')
-    spchars = "-f_f,f.f;f:f<f>f#f&f!f?".split('f')
+    nums = "1234567890"
+    bchars = "QWERTYUIOPASDFGHJKLZXCVBNM"
+    schars = "qwertyuiopasdfghjklzxcvbnm"
+    spchars = "-_,.;:<>#&!?"
 
     counters = [0, 0, 0, 0]
     for i in string:
@@ -52,11 +52,9 @@ def meets_requirements(string: str, numbers: int, bigchars: int,
 
 def using_legalcharacters(string: str, charset: str) -> bool:
     if charset == 'username':
-        legalcharacters = "1,2,3,4,5,6,7,8,9,0,q,w,e,r,t,y,u,i,o,p,a,s,d,f,g,h,j,k,l,z,x,c,v,b,n,m,Q,W,E,R,T,Y,U,I,O,P,A,S,D,F,G,H,J,K,L,Z,X,C,V,B,N,M,-,_".split(
-            ',')
+        legalcharacters = "1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM-_"
     elif charset == 'password':
-        legalcharacters = "1£2£3£4£5£6£7£8£9£0£q£w£e£r£t£y£u£i£o£p£a£s£d£f£g£h£j£k£l£z£x£c£v£b£n£m£Q£W£E£R£T£Y£U£I£O£P£A£S£D£F£G£H£J£K£L£Z£X£C£V£B£N£M£-£_£,£.£;£:£<£>£#£&£!£?".split(
-            '£')
+        legalcharacters = "1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM-_,.;:<>#&!?"
 
     for i in string:
         if i not in legalcharacters:
