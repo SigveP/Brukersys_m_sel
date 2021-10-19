@@ -1,6 +1,6 @@
 # testet med
-# python 3.9.6 64-bit
-# Windows 11 21H2
+# Python version: 3.9.6 64-bit
+# OS: Windows 11 21H2
 
 import sql_functions as sqlf
 import PyQt6.QtWidgets as QtW
@@ -209,6 +209,9 @@ class CreateUserWindow(QtW.QWidget):
         rpasswordlayout.addWidget(rpassword_label)
         rpasswordlayout.addWidget(rpassword_field)
 
+        requirements_button = QtW.QPushButton(text="Requirements")
+        requirements_button.clicked.connect(self.showrequirements)
+
         if kwargs['changepassword']:
             change_button = QtW.QPushButton(text="Change Password")
             change_button.clicked.connect(lambda: self.createuser(
@@ -217,9 +220,6 @@ class CreateUserWindow(QtW.QWidget):
                 rpassword_field.text()
             ))
         else:
-            requirements_button = QtW.QPushButton(text="Requirements")
-            requirements_button.clicked.connect(self.showrequirements)
-
             create_button = QtW.QPushButton(text="Create Account")
             create_button.clicked.connect(lambda: self.createuser(
                 name_field.text(),
@@ -231,6 +231,7 @@ class CreateUserWindow(QtW.QWidget):
         if kwargs['changepassword']:
             windowlayout.addLayout(passwordlayout)
             windowlayout.addLayout(rpasswordlayout)
+            windowlayout.addWidget(requirements_button)
             windowlayout.addWidget(change_button)
         else:
             windowlayout.addLayout(namelayout)
@@ -276,7 +277,7 @@ class CreateUserWindow(QtW.QWidget):
         QtW.QMessageBox.about(
             self,
             'Requirements',
-            "Username:\n1 small character\n\nPassword:\n1 number\n1 large character\n1 small character\n1 special character"
+            "Username:\n3-15 characters\n1 small character\n\nPassword:\n5-25 characters\n1 number\n1 large character\n1 small character\n1 special character"
         )
 
 
