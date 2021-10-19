@@ -1,9 +1,22 @@
 import unittest
 import sql_functions as sqlf
 import tests
+import crypto
 
 
-class testtests(unittest.TestCase):
+class testCrypto(unittest.TestCase):
+
+    def test_both(self):
+        s = "potet"
+        v, k = crypto.encrypt(s)
+
+        v = v.decode()
+
+        self.assertFalse(s == v)
+        self.assertTrue(s == crypto.decrypt(v, k))
+
+
+class testTests(unittest.TestCase):
 
     def test_between(self):
 
@@ -55,7 +68,7 @@ class testSQL(unittest.TestCase):
 
     def test_checkpass(self):
 
-        self.assertTrue(sqlf.check_password('admin', 'Pass1.'))
+        self.assertTrue(sqlf.check_password('admin', 'Admin.1'))
 
         self.assertFalse(sqlf.check_password('admin', '123efwef.'))
 
