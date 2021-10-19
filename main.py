@@ -1,8 +1,11 @@
+# testet med
 # python 3.9.6 64-bit
+# Windows 11 21H2
 
 import sql_functions as sqlf
 import PyQt6.QtWidgets as QtW
 import PyQt6.QtGui as QtG
+from PyQt6.QtCore import Qt
 from sys import argv
 from time import time
 
@@ -17,7 +20,7 @@ class MainWindow(QtW.QWidget):
         self.last_check = time()  # hvis under 3 min: ikke spør om passord
         self.images = {
             'seal': (  # bilde, beskrivelse
-                QtG.QPixmap('images/sel.jpg').scaledToWidth(200),
+                QtG.QPixmap('images/sel.jpg').scaledToWidth(250),
                 "en klump med fet og dyn."
             )
         }
@@ -25,8 +28,10 @@ class MainWindow(QtW.QWidget):
         contentlayout = QtW.QVBoxLayout()
         content_image = QtW.QLabel()
         content_image.setPixmap(self.images['seal'][0])
+        content_image.setAlignment(Qt.AlignmentFlag.AlignCenter)
         content_label = QtW.QLabel(
             text="Bilde av {}".format(self.images['seal'][1]))
+        content_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         contentlayout.addWidget(content_image)
         contentlayout.addWidget(content_label)
 
@@ -54,6 +59,8 @@ class MainWindow(QtW.QWidget):
             windowlayout.addLayout(adminbuttonlayout)
 
         self.setLayout(windowlayout)
+        self.setWindowTitle("Brukersys med sel")
+        self.setMinimumWidth(300)
         self.show()
 
     def check(self):
@@ -136,6 +143,10 @@ class AdministrationWindow(QtW.QWidget):
             layout.addWidget(disable_button)
 
         self.setLayout(layout)
+        if kwargs['temppass']:
+            self.setWindowTitle("Temporary Password")
+        elif kwargs['disenable']:
+            self.setWindowTitle("Dis/Enable")
 
     def createtemppass(self):
         temppass = sqlf.create_temporary_password(
@@ -190,9 +201,9 @@ class CreateUserWindow(QtW.QWidget):
         passwordlayout.addWidget(password_field)
 
         rpasswordlayout = QtW.QHBoxLayout()
-        rpassword_label = QtW.QLabel(text=" Password: ")
+        rpassword_label = QtW.QLabel(text="rPassword: ")
         if kwargs['changepassword']:
-            rpassword_label.setText("New Password: ")
+            rpassword_label.setText("         rPassword")
         rpassword_field = QtW.QLineEdit()
         rpassword_field.setEchoMode(QtW.QLineEdit.EchoMode.Password)
         rpasswordlayout.addWidget(rpassword_label)
@@ -206,6 +217,9 @@ class CreateUserWindow(QtW.QWidget):
                 rpassword_field.text()
             ))
         else:
+            requirements_button = QtW.QPushButton(text="Requirements")
+            requirements_button.clicked.connect(self.showrequirements)
+
             create_button = QtW.QPushButton(text="Create Account")
             create_button.clicked.connect(lambda: self.createuser(
                 name_field.text(),
@@ -222,10 +236,16 @@ class CreateUserWindow(QtW.QWidget):
             windowlayout.addLayout(namelayout)
             windowlayout.addLayout(passwordlayout)
             windowlayout.addLayout(rpasswordlayout)
+            windowlayout.addWidget(requirements_button)
             windowlayout.addWidget(create_button)
 
         self.setLayout(windowlayout)
         self.kwargs = kwargs
+        if kwargs['changepassword']:
+            self.setWindowTitle("Change Password")
+        else:
+            self.setWindowTitle("Create Account")
+        self.setFixedWidth(250)
         self.show()
 
     def createuser(self, username, password, rpassword):
@@ -251,6 +271,13 @@ class CreateUserWindow(QtW.QWidget):
             errors.showMessage(
                 "There was an error while trying to make the account {0}".format(username))
         return
+
+    def showrequirements(self):
+        QtW.QMessageBox.about(
+            self,
+            'Requirements',
+            "Username:\n1 small character\n\nPassword:\n1 number\n1 large character\n1 small character\n1 special character"
+        )
 
 
 class LoginWindow(QtW.QWidget):
@@ -308,6 +335,9 @@ class LoginWindow(QtW.QWidget):
             windowlayout.addLayout(buttonlayout)
 
         self.setLayout(windowlayout)
+        self.setWindowTitle("Login")
+        self.setFixedWidth(300)
+        self.setFixedHeight(130)
 
     def login(self, username: str, password: str):
         if self.kwargs['getpassword']:
@@ -345,6 +375,7 @@ def exit_program():
 if __name__ == "__main__":
     app = QtW.QApplication(argv)
     errors = QtW.QErrorMessage()
+    errors.setWindowTitle("Error")
     sqlf.delete_expired_temporary_passwords()
     windows = {'login': LoginWindow()}
     windows['login'].show()
