@@ -7,6 +7,7 @@ import PyQt6.QtWidgets as QtW
 import PyQt6.QtGui as QtG
 from PyQt6.QtCore import Qt
 from sys import argv
+from os import path
 from time import time
 
 
@@ -18,9 +19,12 @@ class MainWindow(QtW.QWidget):
         self.username = username
         self.id = id
         self.last_check = time()  # hvis under 3 min: ikke spør om passord
+        # kan ikke se utenfor vsc uten denne
+        currentpath = path.dirname(path.abspath(__file__))
         self.images = {
             'seal': (  # bilde, beskrivelse
-                QtG.QPixmap('images/sel.jpg').scaledToWidth(250),
+                QtG.QPixmap(
+                    f'{currentpath}/images/sel.jpg').scaledToWidth(250),
                 "en klump med fet og dyn."
             )
         }
