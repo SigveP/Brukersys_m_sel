@@ -303,20 +303,20 @@ class LoginWindow(QtW.QWidget):
             name_user = QtW.QLabel(text=kwargs['username'])
             namelayout.addWidget(name_user)
         else:
-            name_field = QtW.QLineEdit()
-            namelayout.addWidget(name_field)
+            self.name_field = QtW.QLineEdit()
+            namelayout.addWidget(self.name_field)
 
         passwordlayout = QtW.QHBoxLayout()
         password_label = QtW.QLabel(text=" Password: ")
-        password_field = QtW.QLineEdit()
-        password_field.setEchoMode(QtW.QLineEdit.EchoMode.Password)
+        self.password_field = QtW.QLineEdit()
+        self.password_field.setEchoMode(QtW.QLineEdit.EchoMode.Password)
         passwordlayout.addWidget(password_label)
-        passwordlayout.addWidget(password_field)
+        passwordlayout.addWidget(self.password_field)
 
         if kwargs['getpassword']:
             confirm_button = QtW.QPushButton(text="Confirm")
             confirm_button.clicked.connect(lambda: self.login(
-                kwargs['username'], password_field.text()))
+                kwargs['username'], self.password_field.text()))
 
         else:
             buttonlayout = QtW.QHBoxLayout()
@@ -325,8 +325,8 @@ class LoginWindow(QtW.QWidget):
             cuser_button.clicked.connect(self.createuser)
             login_button = QtW.QPushButton(text="login")
             login_button.clicked.connect(lambda: self.login(
-                name_field.text(),
-                password_field.text()
+                self.name_field.text(),
+                self.password_field.text()
             ))
             buttonlayout.addWidget(cuser_button)
             buttonlayout.addWidget(login_button)
@@ -370,6 +370,13 @@ class LoginWindow(QtW.QWidget):
         if self.kwargs['getpassword']:
             return super().closeEvent(a0)
         exit_program()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Return:
+            if self.kwargs['getpassword']:
+                self.login(self.kwargs['username'], self.password_field.text())
+            else:
+                self.login(self.name_field.text(), self.password_field.text())
 
 
 def exit_program():
