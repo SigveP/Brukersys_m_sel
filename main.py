@@ -115,7 +115,11 @@ class AdministrationWindow(QtW.QWidget):
 
         self.id = id
 
+        userlayout = QtW.QHBoxLayout()
+        user_label = QtW.QLabel(text="Username: ")
         self.user_field = QtW.QLineEdit()
+        userlayout.addWidget(user_label)
+        userlayout.addWidget(self.user_field)
 
         try:
             assert kwargs['temppass']
@@ -138,7 +142,7 @@ class AdministrationWindow(QtW.QWidget):
             disable_button.clicked.connect(self.disableaccount)
 
         layout = QtW.QVBoxLayout()
-        layout.addWidget(self.user_field)
+        layout.addLayout(userlayout)
         if kwargs['temppass']:
             layout.addWidget(self.pass_label)
             layout.addWidget(create_button)
