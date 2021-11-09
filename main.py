@@ -73,6 +73,8 @@ class MainWindow(QtW.QWidget):
         if ((t - self.last_check) / 60) < 1:
             return True
         else:
+            if self.isadmin and not sqlf.isAdministrator(self.id):
+                return False
             windows['passwordcheck'] = LoginWindow(
                 getpassword=True, username=self.username)
             windows['passwordcheck'].show()
